@@ -4,11 +4,11 @@ import torch.nn.functional as F
 
 def test(model, test_loader):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    model.eval()  # 设置模型为评估模式
+    model.eval()
     tp = tn = fp = fn = 0
     test_loss = 0
     test_batches = 0
-    with torch.no_grad():  # 不需要计算梯度
+    with torch.no_grad():
         for test_graph, test_label, _, _, test_embedding, _, _ in test_loader:
             test_embedding = torch.tensor(test_embedding, dtype=torch.float32)
             test_embedding = test_embedding.to(device)
@@ -21,9 +21,9 @@ def test(model, test_loader):
             loss = F.binary_cross_entropy_with_logits(test_logits, test_label)
             test_loss += loss.item()
             test_batches += 1
-            # 计算预测值
+
             predictions = torch.round(test_logits)
-            # 计算TP, TN, FP, FN
+
             tp += ((predictions == 1) & (test_label == 1)).sum().item()
             tn += ((predictions == 0) & (test_label == 0)).sum().item()
             fp += ((predictions == 1) & (test_label == 0)).sum().item()

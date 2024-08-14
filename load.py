@@ -113,7 +113,7 @@ def load_data(files):
     val_dataset = GraphDataset(*zip(*val_df.values.tolist()))
     test_dataset = GraphDataset(*zip(*test_df.values.tolist()))
 
-    # 创建数据加载器
+
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, collate_fn=collate)
     val_loader = DataLoader(val_dataset, batch_size=32, shuffle=True, collate_fn=collate)
     test_loader = DataLoader(test_dataset, batch_size=32, shuffle=True, collate_fn=collate)

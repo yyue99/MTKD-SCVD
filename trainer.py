@@ -30,9 +30,9 @@ def training(loader_t, loader_v, epochs, model, teacher_g=None, teacher_s=None, 
                 w2v_embedding = w2v_embedding.to(device)
                 ft_embedding = torch.tensor(ft_embedding, dtype=torch.float32)
                 ft_embedding = ft_embedding.to(device)
-                with torch.no_grad():  # 不需要计算梯度
-                    # 应用softmax以确保权重和为1
-                    weights = torch.softmax(model.w, dim=0)
+                with torch.no_grad():
+
+
                     graphs, features, node_degs, graph_sizes = merge_Graph(batched_g)
                     graphs = graphs.cuda()
                     # labels = torch.FloatTensor(labels).cuda()
@@ -75,14 +75,14 @@ def training(loader_t, loader_v, epochs, model, teacher_g=None, teacher_s=None, 
                 optimizer.step()
                 epoch_loss += loss.item()
                 num_batches += 1
-                # 更新进度条
+
                 pbar.update(1)
         avg_loss = epoch_loss / num_batches
         print('Epoch %d | Average Loss: %.4f ' % (epoch, avg_loss))
         if (epoch + 1) % 20 == 0:
-            # 验证逻辑
-            model.eval()  # 设置模型为评估模式
-            with torch.no_grad():  # 不需要计算梯度
+
+            model.eval()
+            with torch.no_grad():
                 tp = tn = fp = fn = 0
                 val_loss = 0
                 val_batches = 0
@@ -100,7 +100,7 @@ def training(loader_t, loader_v, epochs, model, teacher_g=None, teacher_s=None, 
                     loss = F.binary_cross_entropy_with_logits(val_logits, val_label)
                     val_loss += loss.item()
                     val_batches += 1
-                    # 计算FP和FN的索引
+
                     predictions = torch.round(val_logits)
                     fp_mask = (predictions == 1) & (val_label == 0)
                     fn_mask = (predictions == 0) & (val_label == 1)
@@ -109,7 +109,7 @@ def training(loader_t, loader_v, epochs, model, teacher_g=None, teacher_s=None, 
                     fp_indices.extend(batch_fp_indices)
                     fn_indices.extend(batch_fn_indices)
 
-                    # 计算TP, TN, FP, FN
+
                     tp += ((predictions == 1) & (val_label == 1)).sum().item()
                     tn += ((predictions == 0) & (val_label == 0)).sum().item()
                     fp += ((predictions == 1) & (val_label == 0)).sum().item()
