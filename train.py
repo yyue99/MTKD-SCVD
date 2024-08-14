@@ -6,7 +6,7 @@ from trainer import training
 from load import load_data
 
 
-files = ['./dataset/re_data_word2vec_fragment_vectors.pk',
+files = ['./dataset/re_data_word2vec_fragment_vectors.pkl',
          './dataset/re_data_FastText_fragment_vectors.pkl',
          './dataset/re_data.jsonl']
 loader_t, loader_v, _ = load_data(files)
