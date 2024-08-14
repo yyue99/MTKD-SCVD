@@ -5,7 +5,7 @@ from tqdm import tqdm
 from dataset.funcs import merge_Graph
 
 
-def train(loader_t, loader_v, epochs, model, teacher_g=None, teacher_s=None, student=None):
+def training(loader_t, loader_v, epochs, model, teacher_g=None, teacher_s=None, student=None):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     model.train()
     teacher_g.to(device)
@@ -59,7 +59,6 @@ def train(loader_t, loader_v, epochs, model, teacher_g=None, teacher_s=None, stu
                     _, _, _, logits_stu = student(w2v_embedding, batched_graph, features)
                 logits_stu = logits_stu.squeeze(1)
                 logits_stu = F.sigmoid(logits_stu)
-                # out = model(batched_embedding).squeeze(1)
                 s_out, g_out, _, out = model(w2v_embedding, batched_graph, features)
                 out = out.squeeze(1)
                 logits = F.sigmoid(out)
@@ -69,12 +68,8 @@ def train(loader_t, loader_v, epochs, model, teacher_g=None, teacher_s=None, stu
                 logits_s = F.sigmoid(logits_s)
                 loss_logits = F.binary_cross_entropy_with_logits(logits, logits_g) + F.binary_cross_entropy_with_logits(logits, logits_s)
                 loss_pred = F.binary_cross_entropy_with_logits(logits, batched_label)
-                loss_g = F.mse_loss(g_out, feat_g)
-                loss_s = F.mse_loss(s_out, feat_s)
                 loss_stu = F.binary_cross_entropy_with_logits(logits, logits_stu)
-                # loss = 0.1 * loss_g + loss_pred + 0.1 * loss_s
-                # loss = 0.1 * loss_g + loss_pred + 0.1 * loss_stu + 0.1 * loss_s + 0.2 * loss_logits
-                loss = loss_pred + 0.1 * loss_stu + 0.2 * loss_logits
+                loss = 0.85 * loss_pred + 0.05 * loss_stu + 0.1 * loss_logits
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
@@ -133,7 +128,7 @@ def train(loader_t, loader_v, epochs, model, teacher_g=None, teacher_s=None, stu
                 print('acc: %.4f | recall: %.4f | precision: %.4f | f1: %.4f' % (acc, recall, precision, f1))
                 if f1 > best_f1:
                     best_f1 = f1
-                    filename = './model/ar/student/logits/ar_bestmodel_f1_{:.4f}_re_{:.4f}_pre_{:.4f}.pth'.format(f1,
+                    filename = './model/re/student_f1_{:.4f}_re_{:.4f}_pre_{:.4f}.pth'.format(f1,
                                                                                                                 recall,
                                                                                                                 precision)
                     torch.save(model.state_dict(), filename)

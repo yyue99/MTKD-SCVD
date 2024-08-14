@@ -2,7 +2,7 @@ import torch
 from model.student import Student
 from model.teacher1 import Classifier
 from model.teacher2 import CBGRU
-from trainer import train
+from trainer import training
 from load import load_data
 
 
@@ -33,7 +33,7 @@ teacher_g.load_state_dict(torch.load('./model/re/teacher_g.pth'))
 teacher_s = CBGRU(300, 100, 1)
 teacher_s.load_state_dict(torch.load('./model/re/teacher_s.pth'))
 
-train(loader_t, loader_v, 500, teacher_g, teacher_s, student)
+training(loader_t, loader_v, 500, teacher_g, teacher_s, student)
 
 
 
