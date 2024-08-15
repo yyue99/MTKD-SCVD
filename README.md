@@ -16,7 +16,7 @@ the overall pipeline of our proposed multi-teacher knowledge distillation framew
 
 
 ## Dataset
-The original solidity codes are from [Zhuang et al., 2020](https://github.com/smartbugs/smartbugs). The processed files can be found at ...
+The original solidity codes are from [SmartBugs](https://github.com/smartbugs/smartbugs). The processed files can be found at ...
 
 
 ### Note
