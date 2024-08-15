@@ -5,17 +5,21 @@ import torch.nn.functional as F
 def test(model, test_loader):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     model.eval()
+    model.to(device)
     tp = tn = fp = fn = 0
     test_loss = 0
     test_batches = 0
     with torch.no_grad():
-        for test_graph, test_label, _, _, test_embedding, _, _ in test_loader:
+        for test_graph, _, _, test_embedding, _, _, test_label in test_loader:
             test_embedding = torch.tensor(test_embedding, dtype=torch.float32)
+            test_label = torch.tensor(test_label, dtype=torch.float32)
+
             test_embedding = test_embedding.to(device)
             test_label = test_label.to(device)
             test_graph = test_graph.to(device)
             test_features = test_graph.ndata['feat']
-            _, _, test_out = model(test_embedding, test_graph, test_features)
+            test_features = test_features.to(device)
+            _, _, _, test_out = model(test_embedding, test_graph, test_features)
             test_out = test_out.squeeze(1)
             test_logits = F.sigmoid(test_out)
             loss = F.binary_cross_entropy_with_logits(test_logits, test_label)

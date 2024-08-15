@@ -2,7 +2,7 @@ import json
 import pickle
 from collections import defaultdict
 import random
-
+from imblearn.over_sampling import RandomOverSampler
 import dgl
 import numpy as np
 import pandas as pd
@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, random_split
 from torch.utils.data import Dataset
 from dataset.collator import collate
+
 
 
 
@@ -97,25 +98,61 @@ def load_data(files):
 
     df = pd.DataFrame(data)
 
+    train_df, temp_df = train_test_split(df, test_size=0.8, random_state=42, stratify=df['labels'])
+    val_df, test_df = train_test_split(temp_df, test_size=0.5, random_state=42, stratify=temp_df['labels'])
 
-    train_df, temp_df = train_test_split(df, test_size=0.3, random_state=42, stratify=df['labels'])
-    val_df, test_df = train_test_split(temp_df, test_size=0.33, random_state=42, stratify=temp_df['labels'])
+    oversampler = RandomOverSampler(random_state=42)
 
-    train_dataset = GraphDataset(
-        dgraphs=train_df['dg'].tolist(),
-        labels=train_df['labels'].tolist(),
-        idx=train_df['idxo'].tolist(),
-        graphs=train_df['go'].tolist(),
-        w2v_embeddings=train_df['w2vembo'].tolist(),
-        edges=train_df['edgeo'].tolist(),
-        ft_embeddings=train_df['ftembo'].tolist()
-    )
-    val_dataset = GraphDataset(*zip(*val_df.values.tolist()))
-    test_dataset = GraphDataset(*zip(*test_df.values.tolist()))
+    train_features_over, train_labels_over = oversampler.fit_resample(train_df.drop('labels', axis=1), train_df['labels'])
+    val_features_over, val_labels_over = oversampler.fit_resample(val_df.drop('labels', axis=1), val_df['labels'])
+    test_features_over, test_labels_over = oversampler.fit_resample(test_df.drop('labels', axis=1), test_df['labels'])
+
+    train_df_over = pd.DataFrame(train_features_over, columns=train_df.drop('labels', axis=1).columns)
+    train_df_over['labels'] = train_labels_over
+
+    val_df_over = pd.DataFrame(val_features_over, columns=val_df.drop('labels', axis=1).columns)
+    val_df_over['labels'] = val_labels_over
+
+    test_df_over = pd.DataFrame(test_features_over, columns=test_df.drop('labels', axis=1).columns)
+    test_df_over['labels'] = test_labels_over
+
+    train_dataset = GraphDataset(*zip(*train_df_over.values.tolist()))
+    val_dataset = GraphDataset(*zip(*val_df_over.values.tolist()))
+    test_dataset = GraphDataset(*zip(*test_df_over.values.tolist()))
+
+    # # 创建 RandomUnderSampler 实例，专门用于对label为0的样本进行欠采样
+    # undersampler = RandomUnderSampler(sampling_strategy='majority', random_state=42)
+    #
+    # # 分别对训练集、验证集和测试集进行欠采样
+    # train_features_under, train_labels_under = undersampler.fit_resample(train_df.drop('labels', axis=1), train_df['labels'])
+    # val_features_under, val_labels_under = undersampler.fit_resample(val_df.drop('labels', axis=1), val_df['labels'])
+    # test_features_under, test_labels_under = undersampler.fit_resample(test_df.drop('labels', axis=1), test_df['labels'])
+    #
+    # # 创建欠采样后的 DataFrame
+    # train_df_under = pd.DataFrame(train_features_under, columns=train_df.drop('labels', axis=1).columns)
+    # train_df_under['labels'] = train_labels_under
+    #
+    # val_df_under = pd.DataFrame(val_features_under, columns=val_df.drop('labels', axis=1).columns)
+    # val_df_under['labels'] = val_labels_under
+    #
+    # test_df_under = pd.DataFrame(test_features_under, columns=test_df.drop('labels', axis=1).columns)
+    # test_df_under['labels'] = test_labels_under
+    #
+    # train_dataset = GraphDataset(
+    #     dgraphs=train_df['dg'].tolist(),
+    #     labels=train_df['labels'].tolist(),
+    #     idx=train_df['idxo'].tolist(),
+    #     graphs=train_df['go'].tolist(),
+    #     w2v_embeddings=train_df['w2vembo'].tolist(),
+    #     edges=train_df['edgeo'].tolist(),
+    #     ft_embeddings=train_df['ftembo'].tolist()
+    # )
+    # # val_dataset = GraphDataset(*zip(*val_df.values.tolist()))
+    # # test_dataset = GraphDataset(*zip(*test_df.values.tolist()))
 
 
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, collate_fn=collate)
-    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=True, collate_fn=collate)
-    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=True, collate_fn=collate)
+    test_loader = DataLoader(val_dataset, batch_size=32, shuffle=True, collate_fn=collate)
+    val_loader = DataLoader(test_dataset, batch_size=32, shuffle=True, collate_fn=collate)
 
     return train_loader, test_loader, val_loader

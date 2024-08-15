@@ -88,7 +88,7 @@ def training(loader_t, loader_v, epochs, model, teacher_g=None, teacher_s=None, 
                 val_batches = 0
                 fp_indices = []
                 fn_indices = []
-                for val_graph, val_label, idx, _, val_embedding, _, _ in loader_v:
+                for val_graph, _, _, val_embedding, _, _, val_label in loader_v:
                     val_embedding = torch.tensor(val_embedding, dtype=torch.float32)
                     val_embedding = val_embedding.to(device)
                     val_label = val_label.to(device)
